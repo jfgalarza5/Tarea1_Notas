@@ -28,12 +28,19 @@ function renderNote(note) {
 noteForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const note = noteInput.value.trim();
-  if (note) {
-    saveNote(note);
-    loadNotes();
-    noteInput.value = '';
-    modal.classList.add('hidden');
+
+  if (!note) {
+    const snackbarContainer = document.querySelector('#demo-snackbar');
+    snackbarContainer.MaterialSnackbar.showSnackbar({
+      message: 'No puedes añadir una nota vacía'
+    });
+    return;
   }
+
+  saveNote(note);
+  loadNotes();
+  noteInput.value = '';
+  modal.classList.add('hidden');
 });
 
 addNoteBtn.addEventListener('click', () => {
@@ -50,9 +57,17 @@ modal.addEventListener('click', (e) => {
 
 loadNotes();
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((reg) => console.log('Service Worker registrado:', reg.scope));
-  });
-}
+window.addEventListener('load', async () => {
+    await Notification.requestPermission();
+    if('serviceWorker' in navigator) {
+        const res = await navigator.serviceWorker.register('/sw.js');
+        if(res){
+            const ready = await navigator.serviceWorker.ready;
+            ready.showNotification("Notes",{
+                body: "La aplicacion se ha instalado correctamente",
+                icon: "/src/images/icons/icon-144x144.png",
+                vibrate: [100, 50, 200]
+            });
+        }
+    }
+});
